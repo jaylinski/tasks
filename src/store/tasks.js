@@ -472,6 +472,30 @@ const mutations = {
 	},
 
 	/**
+	 * Adds an alarm to a task
+	 *
+	 * @param {object} state The store data
+	 * @param {object} data Destructuring object
+	 * @param {Task} data.task The task
+	 * @param {object} data.alarm The alarm to add
+	 */
+	addAlarm(state, { task, alarm }) {
+		task.addAlarm(alarm)
+	},
+
+	/**
+	 * Removes an alarm from a task
+	 *
+	 * @param {object} state The store data
+	 * @param {object} data Destructuring object
+	 * @param {Task} data.task The task
+	 * @param {object} data.alarm The alarm to remove
+	 */
+	removeAlarm(state, { task, alarm }) {
+		task.removeAlarm(alarm)
+	},
+
+	/**
 	 * Sets the priority of a task
 	 *
 	 * @param {object} state The store data
@@ -1193,6 +1217,43 @@ const actions = {
 	 */
 	async addTag(context, { task, tag }) {
 		context.commit('addTag', { task, tag })
+		context.dispatch('updateTask', task)
+	},
+
+	/**
+	 * Adds an alarm to a task
+	 *
+	 * @param {object} context The store context
+	 * @param {Task} task The task to update
+	 * @param {object} alarm
+	 */
+	async addAlarm(context, { task, alarm }) {
+		context.commit('addAlarm', { task, alarm })
+		context.dispatch('updateTask', task)
+	},
+
+	/**
+	 * Adds an alarm to a task
+	 *
+	 * @param {object} context The store context
+	 * @param {Task} task The task to update
+	 * @param {number} index
+	 * @param {object} alarm
+	 */
+	async updateAlarm(context, { task, index, alarm }) {
+		context.commit('updateAlarm', { task, index, alarm })
+		context.dispatch('updateTask', task)
+	},
+
+	/**
+	 * Removes an alarm from a task
+	 *
+	 * @param {object} context The store context
+	 * @param {Task} task The task to update
+	 * @param {object} alarm
+	 */
+	async removeAlarm(context, { task, alarm }) {
+		context.commit('removeAlarm', { task, alarm })
 		context.dispatch('updateTask', task)
 	},
 

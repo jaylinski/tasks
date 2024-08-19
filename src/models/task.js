@@ -86,6 +86,9 @@ export default class Task {
 			this.vtodo.addPropertyWithValue('uid', uuid())
 		}
 
+		// Define components
+		this._alarms = this.getAlarms()
+
 		// Define properties, so Vue reacts to changes of them
 		this._uid = this.vtodo.getFirstPropertyValue('uid') || ''
 		this._summary = this.vtodo.getFirstPropertyValue('summary') || ''
@@ -561,8 +564,71 @@ export default class Task {
 		this._loaded = loadedCompleted
 	}
 
-	get reminder() {
-		return null
+	get alarms() {
+		return this._alarms
+	}
+
+	getAlarms() {
+		return this.vCalendar.getAllSubcomponents('valarm') || []
+	}
+
+	/**
+	 * Add an alarm
+	 *
+	 * @param {object} alarm The alarm
+	 * @param {"AUDIO"|"DISPLAY"|"EMAIL"|"PROCEDURE"} alarm.action This property defines the action to be invoked when an alarm is triggered
+	 * @param {number} alarm.repeat This property defines the number of time the alarm should be repeated, after the initial trigger
+	 * @param {object} alarm.trigger This property specifies when an alarm will trigger
+	 * @param {ICAL.Duration|ICAL.Time} alarm.trigger.value
+	 * @param {object|undefined} alarm.trigger.parameter
+	 * @param {string} alarm.trigger.parameter.name
+	 * @param {string} alarm.trigger.parameter.value
+	 */
+	addAlarm({ action, repeat, trigger }) {
+		const valarm = new ICAL.Component('valarm')
+		valarm.addPropertyWithValue('action', action)
+		valarm.addPropertyWithValue('repeat', repeat)
+		const triggerProperty = valarm.addPropertyWithValue('trigger', trigger.value)
+		if (trigger.parameter) {
+			triggerProperty.setParameter(trigger.parameter.name, trigger.parameter.value)
+		}
+		this.vCalendar.addSubcomponent(valarm)
+
+		this.updateLastModified()
+		this._alarms = this.getAlarms()
+	}
+
+	updateAlarm(index, { action, repeat, trigger }) {
+		// TODO Implement
+
+		this.updateLastModified()
+		this._alarms = this.getAlarms()
+	}
+
+	/**
+	 * Remove an alarm
+	 *
+	 * @param {object} alarm The alarm
+	 */
+	removeAlarm(alarm) {
+		const valarms = this.vCalendar.getAllSubcomponents('valarm')
+
+		// TODO Can we just edit/delete by index?
+		for (const valarm of valarms) {
+			const action = valarm.getFirstPropertyValue('action')
+			const repeat = valarm.getFirstPropertyValue('repeat')
+			const trigger = valarm.getFirstPropertyValue('trigger')
+
+			const repeatToDelete = alarm.alarmComponent.getFirstPropertyFirstValue('repeat')
+			const triggerToDelete = alarm.alarmComponent.getFirstPropertyFirstValue('trigger').toICALJs()
+
+			if (action === alarm.type && repeat === repeatToDelete && trigger === triggerToDelete) {
+				this.vCalendar.removeSubcomponent(valarm)
+			}
+		}
+
+		this.updateLastModified()
+		this._alarms = this.getAlarms()
 	}
 
 	/**
